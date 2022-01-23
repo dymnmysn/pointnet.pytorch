@@ -6,7 +6,7 @@ It is tested with pytorch-1.0.
 # Download data and running
 
 ```
-git clone https://github.com/fxia22/pointnet.pytorch
+git clone https://github.com/dymnmysn/pointnet.pytorch
 cd pointnet.pytorch
 pip install -e .
 ```
