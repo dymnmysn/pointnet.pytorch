@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from pytorch3d.ops import GraphConv
 from pytorch3d.io import load_objs_as_meshes
+from pytorch3d.renderer import Textures
 
 
 class STN3d(nn.Module):
@@ -17,7 +18,8 @@ class STN3d(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        es = torch.tensor([[0, 1]])
+        es = torch.tensor([[0, 1]]).cuda()
+        x = torch.squeeze(x)
         x = F.relu(self.conv1(x, es))
         x = F.relu(self.conv2(x, es))
         x = F.relu(self.conv3(x, es))
@@ -77,11 +79,17 @@ class PointNetfeat(nn.Module):
         self.feature_transform = feature_transform
         if self.feature_transform:
             self.fstn = STNkd(k=64)
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda:0")
+            torch.cuda.set_device(self.device)
+        else:
+            self.device = torch.device("cpu")
 
     def forward(self, x):
-        edges = torch.tensor([[0, 1]])
+        edges = torch.tensor([[0, 1]]).to(self.device)
         n_pts = x.size()[0]
         trans = self.stn(x)
+        x = torch.squeeze(x)
         x = F.relu(self.conv1(x, edges))
 
         if self.feature_transform:
@@ -152,6 +160,7 @@ def feature_transform_regularizer(trans):
 
 
 if __name__ == '__main__':
+    # sim_data = Variable(torch.rand(32,3,2500))
     my_mesh = load_objs_as_meshes(["..\pointnet\dolphin.obj"])
     sim_data = my_mesh.verts_packed()
     trans = STN3d()
